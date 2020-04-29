@@ -4,17 +4,22 @@ var shape_array: Array<iShape> = new Array<iShape>();
 var shape: iShape;
 var hole: iShape;
 var cSize = 10;
+// const foodname = document.getElementById("num1")! as HTMLInputElement;
+// var cCount = foodname.value
+// let foodName = document.getElementById('cCount');
+// let result: Number = parseInt(<string>foodname);
+// console.log(+foodname.value);
 var cCount = 300;
-var cSpeed = 2;
 var accplaceholder: number[];
-var mouseholder: number[];
+var mousex = 0;
+var mousey = 0;
 
 
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
     ctx.fillStyle = "black";
-    ctx.fillRect(0,0,1280,720);
+    ctx.fillRect(0,0,1000,1000);
     
     for ( var i:number = 0; i < shape_array.length; i++) {
         [shape.accx, shape.accy] = [0, 0];
@@ -22,16 +27,20 @@ function gameLoop() {
         [shape.accx, shape.accy] = canvas_gravity(shape,5000);
         for ( var j:number = 0; j < shape_array.length; j++) {
             if (i != j){
-                accplaceholder = repulsion(shape_array[j].x,shape_array[j].y,shape.x, shape.y, 50000);
-                [shape.accx, shape.accy] = add(shape.accx, shape.accy, accplaceholder[0], accplaceholder[1]);
+                [shape.accx, shape.accy] = repulsion(shape_array[j].x,shape_array[j].y,shape.x, shape.y, shape.accx,shape.accy, 10000);
             }
         }
-        accplaceholder = repulsion(mouseholder[0],mouseholder[1],shape.x, shape.y, 500000);
-        [shape.accx, shape.accy] = add(shape.accx, shape.accy, accplaceholder[0], accplaceholder[1]);
+        if (Distance(shape.x,shape.y,mousex,mousey) <= 200){
+            [shape.accx, shape.accy] = repulsion_for_mouse(mousex,mousey,shape.x, shape.y, shape.accx, shape.accy, 500000);
+            shape.color = "red";
+        }
+        else{
+            shape.color = "blue";
+        }
         [shape.velx,shape.vely] =  add(shape.velx,shape.vely,shape.accx,shape.accy);
-        if (mag(shape.velx,shape.vely) > 3){
+        if (mag(shape.velx,shape.vely) > 4){
             [shape.velx,shape.vely] = div(shape.velx,shape.vely,mag(shape.velx,shape.vely));
-            [shape.velx,shape.vely] = mul(shape.velx,shape.vely,3);
+            [shape.velx,shape.vely] = mul(shape.velx,shape.vely,4);
         }
         [shape.x,shape.y] =  add(shape.x,shape.y,shape.velx*1,shape.vely*1);
 
@@ -41,6 +50,7 @@ function gameLoop() {
 
 window.onload = () => {
     canvas = <HTMLCanvasElement>document.getElementById('cnvs');
+    // var cCount = parseFloat(document.getElementById("cCount"));
     ctx = canvas.getContext("2d");
     canvas.addEventListener("mousemove",mouseDown,false);
     CirclePasting();
@@ -48,9 +58,8 @@ window.onload = () => {
 }
 
 function mouseDown(event: MouseEvent): void {
-    var mousex: number = event.x - canvas.offsetLeft + window.pageXOffset;
-    var mousey: number = event.y - canvas.offsetTop + window.pageYOffset;
-    mouseholder = [mousex, mousey];
+     mousex = event.x - canvas.offsetLeft + window.pageXOffset;
+     mousey = event.y - canvas.offsetTop + window.pageYOffset;
 }
 
 
@@ -60,21 +69,35 @@ function canvas_gravity(target: iShape, G: number){ // cia gravitacija
     bordersx = [target.x,target.x,0,canvas.width];
     bordersy = [0,canvas.height, target.y, target.y]
     for (var i = 0; i < 4; i++){
-        var direction = repulsion(bordersx[i], bordersy[i], target.x, target.y,G);
+        var direction = repulsion(bordersx[i], bordersy[i], target.x, target.y,target.accx, target.accy,G);
         [target.accx,target.accy] = add(target.accx,target.accy,direction[0],direction[1]);
     }
     return([target.accx,target.accy]);
 }
+function repulsion_for_mouse(targetx: number, targety: number, moverx: number, movery: number, accx: number, accy: number, G: number){ // repulsija
+    // if (Distance(targetx,targety,moverx,movery) <= 200){
+        var direction = sub(targetx, targety, moverx, movery);
+        var r = mag(direction[0],direction[1]);
+        r = r*r;
+        var magnitude = -G/r;
+        direction = div(direction[0],direction[1],r);
+        direction = mul(direction[0],direction[1],magnitude);
+        [accx,accy] = add(direction[0],direction[1],accx,accy)
+    // }
+    return([accx,accy]);
+}
 
-
-function repulsion(targetx: number, targety: number, moverx: number, movery: number, G: number){ // repulsija
-    var direction = sub(targetx, targety, moverx, movery);
-    var r = mag(direction[0],direction[1]);
-    r = r*r;
-    var magnitude = -G/r;
-    direction = div(direction[0],direction[1],r);
-    direction = mul(direction[0],direction[1],magnitude);
-    return(direction);
+function repulsion(targetx: number, targety: number, moverx: number, movery: number, accx: number, accy: number, G: number){ // repulsija
+    if (Distance(targetx,targety,moverx,movery) <= 150){
+        var direction = sub(targetx, targety, moverx, movery);
+        var r = mag(direction[0],direction[1]);
+        r = r*r;
+        var magnitude = -G/r;
+        direction = div(direction[0],direction[1],r);
+        direction = mul(direction[0],direction[1],magnitude);
+        [accx,accy] = add(direction[0],direction[1],accx,accy)
+    }
+    return([accx,accy]);
 }
 
 function add(u1: number, u2: number, v1: number, v2: number){

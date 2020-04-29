@@ -4,31 +4,40 @@ var shape_array = new Array();
 var shape;
 var hole;
 var cSize = 10;
+// const foodname = document.getElementById("num1")! as HTMLInputElement;
+// var cCount = foodname.value
+// let foodName = document.getElementById('cCount');
+// let result: Number = parseInt(<string>foodname);
+// console.log(+foodname.value);
 var cCount = 300;
-var cSpeed = 2;
 var accplaceholder;
-var mouseholder;
+var mousex = 0;
+var mousey = 0;
 function gameLoop() {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     requestAnimationFrame(gameLoop);
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 1280, 720);
+    ctx.fillRect(0, 0, 1000, 1000);
     for (var i = 0; i < shape_array.length; i++) {
         _a = [0, 0], shape.accx = _a[0], shape.accy = _a[1];
         shape = shape_array[i];
         _b = canvas_gravity(shape, 5000), shape.accx = _b[0], shape.accy = _b[1];
         for (var j = 0; j < shape_array.length; j++) {
             if (i != j) {
-                accplaceholder = repulsion(shape_array[j].x, shape_array[j].y, shape.x, shape.y, 50000);
-                _c = add(shape.accx, shape.accy, accplaceholder[0], accplaceholder[1]), shape.accx = _c[0], shape.accy = _c[1];
+                _c = repulsion(shape_array[j].x, shape_array[j].y, shape.x, shape.y, shape.accx, shape.accy, 10000), shape.accx = _c[0], shape.accy = _c[1];
             }
         }
-        accplaceholder = repulsion(mouseholder[0], mouseholder[1], shape.x, shape.y, 500000);
-        _d = add(shape.accx, shape.accy, accplaceholder[0], accplaceholder[1]), shape.accx = _d[0], shape.accy = _d[1];
+        if (Distance(shape.x, shape.y, mousex, mousey) <= 200) {
+            _d = repulsion_for_mouse(mousex, mousey, shape.x, shape.y, shape.accx, shape.accy, 500000), shape.accx = _d[0], shape.accy = _d[1];
+            shape.color = "red";
+        }
+        else {
+            shape.color = "blue";
+        }
         _e = add(shape.velx, shape.vely, shape.accx, shape.accy), shape.velx = _e[0], shape.vely = _e[1];
-        if (mag(shape.velx, shape.vely) > 3) {
+        if (mag(shape.velx, shape.vely) > 4) {
             _f = div(shape.velx, shape.vely, mag(shape.velx, shape.vely)), shape.velx = _f[0], shape.vely = _f[1];
-            _g = mul(shape.velx, shape.vely, 3), shape.velx = _g[0], shape.vely = _g[1];
+            _g = mul(shape.velx, shape.vely, 4), shape.velx = _g[0], shape.vely = _g[1];
         }
         _h = add(shape.x, shape.y, shape.velx * 1, shape.vely * 1), shape.x = _h[0], shape.y = _h[1];
         shape.draw();
@@ -36,15 +45,15 @@ function gameLoop() {
 }
 window.onload = function () {
     canvas = document.getElementById('cnvs');
+    // var cCount = parseFloat(document.getElementById("cCount"));
     ctx = canvas.getContext("2d");
     canvas.addEventListener("mousemove", mouseDown, false);
     CirclePasting();
     gameLoop();
 };
 function mouseDown(event) {
-    var mousex = event.x - canvas.offsetLeft + window.pageXOffset;
-    var mousey = event.y - canvas.offsetTop + window.pageYOffset;
-    mouseholder = [mousex, mousey];
+    mousex = event.x - canvas.offsetLeft + window.pageXOffset;
+    mousey = event.y - canvas.offsetTop + window.pageYOffset;
 }
 function canvas_gravity(target, G) {
     var _a;
@@ -53,19 +62,36 @@ function canvas_gravity(target, G) {
     bordersx = [target.x, target.x, 0, canvas.width];
     bordersy = [0, canvas.height, target.y, target.y];
     for (var i = 0; i < 4; i++) {
-        var direction = repulsion(bordersx[i], bordersy[i], target.x, target.y, G);
+        var direction = repulsion(bordersx[i], bordersy[i], target.x, target.y, target.accx, target.accy, G);
         _a = add(target.accx, target.accy, direction[0], direction[1]), target.accx = _a[0], target.accy = _a[1];
     }
     return ([target.accx, target.accy]);
 }
-function repulsion(targetx, targety, moverx, movery, G) {
+function repulsion_for_mouse(targetx, targety, moverx, movery, accx, accy, G) {
+    var _a;
+    // if (Distance(targetx,targety,moverx,movery) <= 200){
     var direction = sub(targetx, targety, moverx, movery);
     var r = mag(direction[0], direction[1]);
     r = r * r;
     var magnitude = -G / r;
     direction = div(direction[0], direction[1], r);
     direction = mul(direction[0], direction[1], magnitude);
-    return (direction);
+    _a = add(direction[0], direction[1], accx, accy), accx = _a[0], accy = _a[1];
+    // }
+    return ([accx, accy]);
+}
+function repulsion(targetx, targety, moverx, movery, accx, accy, G) {
+    var _a;
+    if (Distance(targetx, targety, moverx, movery) <= 150) {
+        var direction = sub(targetx, targety, moverx, movery);
+        var r = mag(direction[0], direction[1]);
+        r = r * r;
+        var magnitude = -G / r;
+        direction = div(direction[0], direction[1], r);
+        direction = mul(direction[0], direction[1], magnitude);
+        _a = add(direction[0], direction[1], accx, accy), accx = _a[0], accy = _a[1];
+    }
+    return ([accx, accy]);
 }
 function add(u1, u2, v1, v2) {
     return ([u1 + v1, u2 + v2]);
