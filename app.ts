@@ -2,15 +2,18 @@ var canvas: HTMLCanvasElement;
 var ctx: CanvasRenderingContext2D;
 var shape_array: Array<iShape> = new Array<iShape>();
 var shape: iShape;
-var hole: iShape;
 var cSize = 10;
-// const foodname = document.getElementById("num1")! as HTMLInputElement;
-// var cCount = foodname.value
-// let foodName = document.getElementById('cCount');
-// let result: Number = parseInt(<string>foodname);
-// console.log(+foodname.value);
-var cCount = 300;
-var accplaceholder: number[];
+var cCount: number = 300;
+var Distancing_factor: number = 2;
+var Mouse_distancing_factor: number = 50;
+var Mouse_effect_radius: number = 200;
+
+var Tadpoles_effect_radius: number = 150;
+var Peak_velocity: number = 4;
+var Border_distancing_factor: number = 0.5;
+
+var placeholder: number; 
+
 var mousex = 0;
 var mousey = 0;
 
@@ -19,41 +22,76 @@ var mousey = 0;
 function gameLoop() {
     requestAnimationFrame(gameLoop);
     ctx.fillStyle = "black";
-    ctx.fillRect(0,0,1000,1000);
-    
+    ctx.fillRect(0,0,1280,720);
     for ( var i:number = 0; i < shape_array.length; i++) {
         [shape.accx, shape.accy] = [0, 0];
         shape = shape_array[i];
-        [shape.accx, shape.accy] = canvas_gravity(shape,5000);
+        [shape.accx, shape.accy] = canvas_gravity(shape,Border_distancing_factor*10000);
         for ( var j:number = 0; j < shape_array.length; j++) {
             if (i != j){
-                [shape.accx, shape.accy] = repulsion(shape_array[j].x,shape_array[j].y,shape.x, shape.y, shape.accx,shape.accy, 10000);
+                [shape.accx, shape.accy] = repulsion(shape_array[j].x,shape_array[j].y,shape.x, shape.y, shape.accx,shape.accy, Distancing_factor*10000);
             }
         }
-        if (Distance(shape.x,shape.y,mousex,mousey) <= 200){
-            [shape.accx, shape.accy] = repulsion_for_mouse(mousex,mousey,shape.x, shape.y, shape.accx, shape.accy, 500000);
+        if (Distance(shape.x,shape.y,mousex,mousey) <= Mouse_effect_radius){
+            [shape.accx, shape.accy] = repulsion_for_mouse(mousex,mousey,shape.x, shape.y, shape.accx, shape.accy, Mouse_distancing_factor*10000);
             shape.color = "red";
         }
         else{
             shape.color = "blue";
         }
-        [shape.velx,shape.vely] =  add(shape.velx,shape.vely,shape.accx,shape.accy);
-        if (mag(shape.velx,shape.vely) > 4){
-            [shape.velx,shape.vely] = div(shape.velx,shape.vely,mag(shape.velx,shape.vely));
-            [shape.velx,shape.vely] = mul(shape.velx,shape.vely,4);
+        [shape.velx,shape.vely] = [shape.velx + shape.accx,shape.vely + shape.accy];
+        if (mag(shape.velx,shape.vely) > Peak_velocity){
+            placeholder = mag(shape.velx,shape.vely);
+            [shape.velx,shape.vely] = [shape.velx/placeholder,shape.vely/placeholder];
+            [shape.velx,shape.vely] = [shape.velx*Peak_velocity,shape.vely*Peak_velocity];
         }
-        [shape.x,shape.y] =  add(shape.x,shape.y,shape.velx*1,shape.vely*1);
-
+        [shape.x,shape.y] = [shape.x + shape.velx,shape.y + shape.vely];
         shape.draw();
     }    
 }
 
 window.onload = () => {
     canvas = <HTMLCanvasElement>document.getElementById('cnvs');
-    // var cCount = parseFloat(document.getElementById("cCount"));
     ctx = canvas.getContext("2d");
-    canvas.addEventListener("mousemove",mouseDown,false);
+    const button1 = document.getElementById("1");
+    const button2 = document.getElementById("2");
+    const button3 = document.getElementById("3");
+    const button4 = document.getElementById("4");
+    const button5 = document.getElementById("5");
+    const button6 = document.getElementById("6");
+    const button7 = document.getElementById("7");
+    button1.addEventListener("click",function() {
+        const cConst = document.getElementById("cCount")! as HTMLInputElement;
+        cCount = +cConst.value;
+        shape_array = [];
+        CirclePasting();
+    },false);
+    button2.addEventListener("click",function() {
+        const cConst = document.getElementById("cDistaning_factor")! as HTMLInputElement;
+        Distancing_factor = +cConst.value;
+    },false)
+    button3.addEventListener("click",function() {
+        const cConst = document.getElementById("cMouse_distancing")! as HTMLInputElement;
+        Mouse_distancing_factor = +cConst.value;
+    },false)
+    button4.addEventListener("click",function() {
+        const cConst = document.getElementById("cMouse_effect_radius")! as HTMLInputElement;
+        Mouse_effect_radius = +cConst.value;
+    },false)
+    button5.addEventListener("click",function() {
+        const cConst = document.getElementById("cTadpoles_effect_radius")! as HTMLInputElement;
+        Tadpoles_effect_radius = +cConst.value;
+    },false)
+    button6.addEventListener("click",function() {
+        const cConst = document.getElementById("cPeak_velocity")! as HTMLInputElement;
+        Peak_velocity = +cConst.value;
+    },false)
+    button7.addEventListener("click",function() {
+        const cConst = document.getElementById("cBorder_distancing_factor")! as HTMLInputElement;
+        Border_distancing_factor = +cConst.value;
+    },false)
     CirclePasting();
+    canvas.addEventListener("mousemove",mouseDown,false);
     gameLoop();
 }
 
@@ -70,42 +108,34 @@ function canvas_gravity(target: iShape, G: number){ // cia gravitacija
     bordersy = [0,canvas.height, target.y, target.y]
     for (var i = 0; i < 4; i++){
         var direction = repulsion(bordersx[i], bordersy[i], target.x, target.y,target.accx, target.accy,G);
-        [target.accx,target.accy] = add(target.accx,target.accy,direction[0],direction[1]);
+        [target.accx,target.accy] = [target.accx + direction[0],target.accy + direction[1]]
     }
     return([target.accx,target.accy]);
 }
 function repulsion_for_mouse(targetx: number, targety: number, moverx: number, movery: number, accx: number, accy: number, G: number){ // repulsija
-    // if (Distance(targetx,targety,moverx,movery) <= 200){
-        var direction = sub(targetx, targety, moverx, movery);
+        var direction = [targetx - moverx, targety - movery];
         var r = mag(direction[0],direction[1]);
         r = r*r;
         var magnitude = -G/r;
-        direction = div(direction[0],direction[1],r);
-        direction = mul(direction[0],direction[1],magnitude);
-        [accx,accy] = add(direction[0],direction[1],accx,accy)
-    // }
+        direction = [direction[0]/r,direction[1]/r];
+        direction = [direction[0]*magnitude,direction[1]*magnitude];
+        [accx,accy] = [accx + direction[0],accy + direction[1]];
     return([accx,accy]);
 }
 
 function repulsion(targetx: number, targety: number, moverx: number, movery: number, accx: number, accy: number, G: number){ // repulsija
-    if (Distance(targetx,targety,moverx,movery) <= 150){
-        var direction = sub(targetx, targety, moverx, movery);
+    if (Distance(targetx,targety,moverx,movery) <= Tadpoles_effect_radius){
+        var direction = [targetx - moverx, targety - movery];
         var r = mag(direction[0],direction[1]);
         r = r*r;
         var magnitude = -G/r;
-        direction = div(direction[0],direction[1],r);
-        direction = mul(direction[0],direction[1],magnitude);
-        [accx,accy] = add(direction[0],direction[1],accx,accy)
+        direction = [direction[0]/r,direction[1]/r];
+        direction = [direction[0]*magnitude,direction[1]*magnitude];
+        [accx,accy] = [accx + direction[0],accy + direction[1]];
     }
     return([accx,accy]);
 }
 
-function add(u1: number, u2: number, v1: number, v2: number){
-    return([u1+v1,u2+v2]);
-}
-function sub(u1: number, u2: number, v1: number, v2: number){
-    return([u1-v1,u2-v2]);
-}
 function Distance(x1: number, y1:number, x2:number, y2:number){
     var a = x1 - x2;
     var b = y1 - y2;
@@ -113,12 +143,6 @@ function Distance(x1: number, y1:number, x2:number, y2:number){
 }
 function mag(u1: number, u2: number){
     return(Math.sqrt(u1*u1+u2*u2));
-}
-function div(u1: number, u2: number, n: number ){
-    return([u1/n, u2/n]);
-}
-function mul(u1: number, u2: number, n: number ){
-    return([u1*n,u2*n]);
 }
 function RandomINC(min: number, max: number) {
     min = Math.ceil(min);
@@ -139,7 +163,7 @@ function CirclePasting(): void{
         }
         protection += 1;
         if (protection > cCount*5){
-            console.log("per daug rutuliu, netelpa");
+            alert("there is just to much tadpoles sweetheart, turn it down a notch");
             break;
         }
         if (!overlapping){

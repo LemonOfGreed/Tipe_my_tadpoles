@@ -2,53 +2,90 @@ var canvas;
 var ctx;
 var shape_array = new Array();
 var shape;
-var hole;
 var cSize = 10;
-// const foodname = document.getElementById("num1")! as HTMLInputElement;
-// var cCount = foodname.value
-// let foodName = document.getElementById('cCount');
-// let result: Number = parseInt(<string>foodname);
-// console.log(+foodname.value);
 var cCount = 300;
-var accplaceholder;
+var Distancing_factor = 2;
+var Mouse_distancing_factor = 50;
+var Mouse_effect_radius = 200;
+var Tadpoles_effect_radius = 150;
+var Peak_velocity = 4;
+var Border_distancing_factor = 0.5;
+var placeholder;
 var mousex = 0;
 var mousey = 0;
 function gameLoop() {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     requestAnimationFrame(gameLoop);
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 1000, 1000);
+    ctx.fillRect(0, 0, 1280, 720);
     for (var i = 0; i < shape_array.length; i++) {
         _a = [0, 0], shape.accx = _a[0], shape.accy = _a[1];
         shape = shape_array[i];
-        _b = canvas_gravity(shape, 5000), shape.accx = _b[0], shape.accy = _b[1];
+        _b = canvas_gravity(shape, Border_distancing_factor * 10000), shape.accx = _b[0], shape.accy = _b[1];
         for (var j = 0; j < shape_array.length; j++) {
             if (i != j) {
-                _c = repulsion(shape_array[j].x, shape_array[j].y, shape.x, shape.y, shape.accx, shape.accy, 10000), shape.accx = _c[0], shape.accy = _c[1];
+                _c = repulsion(shape_array[j].x, shape_array[j].y, shape.x, shape.y, shape.accx, shape.accy, Distancing_factor * 10000), shape.accx = _c[0], shape.accy = _c[1];
             }
         }
-        if (Distance(shape.x, shape.y, mousex, mousey) <= 200) {
-            _d = repulsion_for_mouse(mousex, mousey, shape.x, shape.y, shape.accx, shape.accy, 500000), shape.accx = _d[0], shape.accy = _d[1];
+        if (Distance(shape.x, shape.y, mousex, mousey) <= Mouse_effect_radius) {
+            _d = repulsion_for_mouse(mousex, mousey, shape.x, shape.y, shape.accx, shape.accy, Mouse_distancing_factor * 10000), shape.accx = _d[0], shape.accy = _d[1];
             shape.color = "red";
         }
         else {
             shape.color = "blue";
         }
-        _e = add(shape.velx, shape.vely, shape.accx, shape.accy), shape.velx = _e[0], shape.vely = _e[1];
-        if (mag(shape.velx, shape.vely) > 4) {
-            _f = div(shape.velx, shape.vely, mag(shape.velx, shape.vely)), shape.velx = _f[0], shape.vely = _f[1];
-            _g = mul(shape.velx, shape.vely, 4), shape.velx = _g[0], shape.vely = _g[1];
+        _e = [shape.velx + shape.accx, shape.vely + shape.accy], shape.velx = _e[0], shape.vely = _e[1];
+        if (mag(shape.velx, shape.vely) > Peak_velocity) {
+            placeholder = mag(shape.velx, shape.vely);
+            _f = [shape.velx / placeholder, shape.vely / placeholder], shape.velx = _f[0], shape.vely = _f[1];
+            _g = [shape.velx * Peak_velocity, shape.vely * Peak_velocity], shape.velx = _g[0], shape.vely = _g[1];
         }
-        _h = add(shape.x, shape.y, shape.velx * 1, shape.vely * 1), shape.x = _h[0], shape.y = _h[1];
+        _h = [shape.x + shape.velx, shape.y + shape.vely], shape.x = _h[0], shape.y = _h[1];
         shape.draw();
     }
 }
 window.onload = function () {
     canvas = document.getElementById('cnvs');
-    // var cCount = parseFloat(document.getElementById("cCount"));
     ctx = canvas.getContext("2d");
-    canvas.addEventListener("mousemove", mouseDown, false);
+    var button1 = document.getElementById("1");
+    var button2 = document.getElementById("2");
+    var button3 = document.getElementById("3");
+    var button4 = document.getElementById("4");
+    var button5 = document.getElementById("5");
+    var button6 = document.getElementById("6");
+    var button7 = document.getElementById("7");
+    button1.addEventListener("click", function () {
+        var cConst = document.getElementById("cCount");
+        cCount = +cConst.value;
+        shape_array = [];
+        CirclePasting();
+    }, false);
+    button2.addEventListener("click", function () {
+        var cConst = document.getElementById("cDistaning_factor");
+        Distancing_factor = +cConst.value;
+    }, false);
+    button3.addEventListener("click", function () {
+        var cConst = document.getElementById("cMouse_distancing");
+        Mouse_distancing_factor = +cConst.value;
+    }, false);
+    button4.addEventListener("click", function () {
+        var cConst = document.getElementById("cMouse_effect_radius");
+        Mouse_effect_radius = +cConst.value;
+    }, false);
+    button5.addEventListener("click", function () {
+        var cConst = document.getElementById("cTadpoles_effect_radius");
+        Tadpoles_effect_radius = +cConst.value;
+    }, false);
+    button6.addEventListener("click", function () {
+        var cConst = document.getElementById("cPeak_velocity");
+        Peak_velocity = +cConst.value;
+    }, false);
+    button7.addEventListener("click", function () {
+        var cConst = document.getElementById("cBorder_distancing_factor");
+        Border_distancing_factor = +cConst.value;
+    }, false);
     CirclePasting();
+    canvas.addEventListener("mousemove", mouseDown, false);
     gameLoop();
 };
 function mouseDown(event) {
@@ -63,41 +100,33 @@ function canvas_gravity(target, G) {
     bordersy = [0, canvas.height, target.y, target.y];
     for (var i = 0; i < 4; i++) {
         var direction = repulsion(bordersx[i], bordersy[i], target.x, target.y, target.accx, target.accy, G);
-        _a = add(target.accx, target.accy, direction[0], direction[1]), target.accx = _a[0], target.accy = _a[1];
+        _a = [target.accx + direction[0], target.accy + direction[1]], target.accx = _a[0], target.accy = _a[1];
     }
     return ([target.accx, target.accy]);
 }
 function repulsion_for_mouse(targetx, targety, moverx, movery, accx, accy, G) {
     var _a;
-    // if (Distance(targetx,targety,moverx,movery) <= 200){
-    var direction = sub(targetx, targety, moverx, movery);
+    var direction = [targetx - moverx, targety - movery];
     var r = mag(direction[0], direction[1]);
     r = r * r;
     var magnitude = -G / r;
-    direction = div(direction[0], direction[1], r);
-    direction = mul(direction[0], direction[1], magnitude);
-    _a = add(direction[0], direction[1], accx, accy), accx = _a[0], accy = _a[1];
-    // }
+    direction = [direction[0] / r, direction[1] / r];
+    direction = [direction[0] * magnitude, direction[1] * magnitude];
+    _a = [accx + direction[0], accy + direction[1]], accx = _a[0], accy = _a[1];
     return ([accx, accy]);
 }
 function repulsion(targetx, targety, moverx, movery, accx, accy, G) {
     var _a;
-    if (Distance(targetx, targety, moverx, movery) <= 150) {
-        var direction = sub(targetx, targety, moverx, movery);
+    if (Distance(targetx, targety, moverx, movery) <= Tadpoles_effect_radius) {
+        var direction = [targetx - moverx, targety - movery];
         var r = mag(direction[0], direction[1]);
         r = r * r;
         var magnitude = -G / r;
-        direction = div(direction[0], direction[1], r);
-        direction = mul(direction[0], direction[1], magnitude);
-        _a = add(direction[0], direction[1], accx, accy), accx = _a[0], accy = _a[1];
+        direction = [direction[0] / r, direction[1] / r];
+        direction = [direction[0] * magnitude, direction[1] * magnitude];
+        _a = [accx + direction[0], accy + direction[1]], accx = _a[0], accy = _a[1];
     }
     return ([accx, accy]);
-}
-function add(u1, u2, v1, v2) {
-    return ([u1 + v1, u2 + v2]);
-}
-function sub(u1, u2, v1, v2) {
-    return ([u1 - v1, u2 - v2]);
 }
 function Distance(x1, y1, x2, y2) {
     var a = x1 - x2;
@@ -106,12 +135,6 @@ function Distance(x1, y1, x2, y2) {
 }
 function mag(u1, u2) {
     return (Math.sqrt(u1 * u1 + u2 * u2));
-}
-function div(u1, u2, n) {
-    return ([u1 / n, u2 / n]);
-}
-function mul(u1, u2, n) {
-    return ([u1 * n, u2 * n]);
 }
 function RandomINC(min, max) {
     min = Math.ceil(min);
@@ -132,7 +155,7 @@ function CirclePasting() {
         }
         protection += 1;
         if (protection > cCount * 5) {
-            console.log("per daug rutuliu, netelpa");
+            alert("there is just to much tadpoles sweetheart, turn it down a notch");
             break;
         }
         if (!overlapping) {

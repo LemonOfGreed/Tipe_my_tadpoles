@@ -7,9 +7,26 @@
     <title>Type_those_tadpoles</title>
 </head>
 <body>
-    <h1>PLEASE GIB JOB</h1>
-    cCount: <input type="number" id="num1" placeholder ="100" />
+    <h1>Tadpoles and social distancing</h1>
+    <p>Hello and welcome to my first ever Typescript web app. 😊</p>
+    <p>Using this app is simple, just input your desired number value to the bars and press the “go!” button besides it to add your input to the script.</p>
+    <p>Pro tip: Do not do drastic changes on peak velocity, Tadpoles will just gonna fly off canvas. But yet again I am just a text, do what you want :)</p>
+    <p>Another Pro tip: if you put nrgative distance factor, they will going to star to attract each other to little clusters, changing it back to positive going to create an EXPLOSION of tadpoles</p>
+    <p>Tadpole count: <input type="number" id="cCount" value ="300" />
+    <button id="1">go!</button>
+    Tadpole distancing factor: <input type="number" id="cDistaning_factor" value ="2" />
+    <button id="2">go!</button>
+    Mouse distancing factor: <input type="number" id="cMouse_distancing" value ="50" />
+    <button id="3">go!</button>
+    Mouse effect radius:<input type="number" id="cMouse_effect_radius" value ="200" />
+    <button id="4">go!</button>
+    </p><p>Tadpoles effect radius:  <input type="number" id="cTadpoles_effect_radius" value ="150" />
+    <button id="5">go!</button>
+    Peak velocity:  <input type="number" id="cPeak_velocity" value ="4" />
+    <button id="6">go!</button>
+    Border distancing facor:  <input type="number" id="cBorder_distancing_factor" value ="0.5" />
+    <button id="7">go!</button></p>
     <div onmousemove="showCoords(event)" onmouseout="clearCoor()"></div>
-    <canvas id="cnvs" width="1000" height="1000"></canvas>
+    <canvas id="cnvs" width="1280" height="720"></canvas>
 </body>
 </html>
