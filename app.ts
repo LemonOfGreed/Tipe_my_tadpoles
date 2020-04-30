@@ -101,7 +101,7 @@ function mouseDown(event: MouseEvent): void {
 }
 
 
-function canvas_gravity(target: iShape, G: number){ // cia gravitacija
+function canvas_gravity(target: iShape, G: number){
     var bordersx: Array<number>;
     var bordersy: Array<number>;
     bordersx = [target.x,target.x,0,canvas.width];
@@ -112,7 +112,7 @@ function canvas_gravity(target: iShape, G: number){ // cia gravitacija
     }
     return([target.accx,target.accy]);
 }
-function repulsion_for_mouse(targetx: number, targety: number, moverx: number, movery: number, accx: number, accy: number, G: number){ // repulsija
+function repulsion_for_mouse(targetx: number, targety: number, moverx: number, movery: number, accx: number, accy: number, G: number){
         var direction = [targetx - moverx, targety - movery];
         var r = mag(direction[0],direction[1]);
         r = r*r;
@@ -147,7 +147,7 @@ function mag(u1: number, u2: number){
 function RandomINC(min: number, max: number) {
     min = Math.ceil(min);
     max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 function CirclePasting(): void{
     var protection = 0;
